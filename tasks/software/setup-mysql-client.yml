@@ -1,0 +1,11 @@
+---
+- name: Add percona repository
+  yum:
+    name: https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+    state: installed
+
+- name: Install MySQL client
+  yum:
+    name: Percona-Server-client-56
+    state: installed
+

@@ -1,0 +1,111 @@
+---
+- name: Create release directory
+  file:
+    path: "{{ magento_env_path }}/{{ environment_name }}/vanilla-{{magento_version}}"
+    state: directory
+
+- name: Unpack magneto package
+  unarchive:
+    src: files/magento/{{ magento_package_name }}
+    dest: "{{ magento_env_path }}/{{ environment_name }}/vanilla-{{magento_version}}"
+  
+- name: Install magento
+  shell: |
+    php bin/magento setup:install \
+      --backend-frontname={{ magento_backend_frontname}} \
+      --db-host={{ magento_db_host}} \
+      --db-name={{ magento_db_name }} \
+      --db-user={{ magento_db_user }} \
+      --db-password={{ magento_db_password }} \
+      --session-save=redis \
+      --session-save-redis-host={{ magento_session_save_host }} \
+      --session-save-redis-port={{ magento_session_save_port }} \
+      --session-save-redis-db={{ magento_session_save_db }} \
+      --session-save-redis-compression-lib=gzip \
+      --cache-backend=redis \
+      --cache-backend-redis-server={{ magento_cache_backend_host }} \
+      --cache-backend-redis-db={{ magento_cache_backend_db }} \
+      --cache-backend-redis-port={{ magento_cache_backend_port }} \
+      --page-cache=redis \
+      --page-cache-redis-server={{ magento_page_cache_host }} \
+      --page-cache-redis-db={{ magento_page_cache_db }} \
+      --page-cache-redis-port={{ magento_page_cache_port }} \
+      --page-cache-redis-compress-data=1 \
+      --base-url=https://{{  environment_domain  }}/ \
+      --use-secure=1 \
+      --base-url-secure=https://{{  environment_domain  }}/ \
+      --use-secure-admin=1 \
+      --admin-user {{ magento_admin_user }} \
+      --admin-password {{ magento_admin_password }} \
+      --admin-email {{ magento_admin_email }} \
+      --admin-firstname {{ magento_admin_firstname }} \
+      --admin-lastname {{ magento_admin_lastname }}
+  args:
+    chdir: "{{ magento_env_path }}/{{ environment_name }}/vanilla-{{magento_version}}"
+    creates: "{{ magento_env_path }}/{{ environment_name }}/vanilla-{{magento_version}}/app/etc/env.php"
+
+
+- name: "Copy media and var to {{ data_volume_path }}/{{ environment_name }}"
+  shell: |
+    mv {{ magento_env_path }}/{{ environment_name }}/vanilla-{{magento_version}}/{{ item.src }} {{ data_volume_path }}/{{ environment_name }}/{{ item.dest }}
+  with_items:
+    - { src: var, dest: var }
+    - { src: pub/media, dest: media }
+  args:
+    creates: "{{ data_volume_path }}/{{ environment_name }}/{{ item.dest }}/media"
+
+- name: Delete media and var
+  file: 
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - var
+    - pub/media
+
+- name: "Link media and var from {{ data_volume_path }}/{{ environment_name }}"
+  file:
+    src: "{{ data_volume_path }}/{{ environment_name }}/{{ item.src }}"
+    dest: "{{ magento_env_path }}/{{ environment_name }}/vanilla-{{magento_version}}/{{ item.dest }}"
+    state: link
+  with_items:
+    - { src: var, dest: var }
+    - { src: media, dest: pub/media }
+
+
+- name: Set deploy mode to production
+  shell: php bin/magento deploy:mode:set production
+  args:
+    chdir: "{{ magento_env_path }}/{{ environment_name }}/vanilla-{{magento_version}}"
+
+- name: Enable varnish
+  shell: "{{ item }}"
+  args:
+    chdir: "{{ magento_env_path }}/{{ environment_name }}/vanilla-{{magento_version}}"
+  with_items:
+    - php bin/magento setup:config:set --http-cache-hosts=localhost:6081
+    - php bin/magento config:set --scope=default --scope-code=0 system/full_page_cache/caching_application 2
+  when: magento_varnish == 1
+
+- name: "Create current link"
+  file:
+    src: "{{ magento_env_path }}/{{ environment_name }}/vanilla-{{magento_version}}"
+    dest: "{{ magento_env_path }}/{{ environment_name }}/current"
+    state: link
+  with_items:
+    - { src: var, dest: var }
+    - { src: media, dest: pub/media }
+
+
+- name: "Install magento cron"
+  cron:
+    name: "{{ environment_name }} cron job"
+    job: "/usr/bin/php {{ magento_env_path }}/{{ environment_name }}/current/bin/magento cron:run 2>&1 | grep -v 'Ran jobs by schedule' >> {{ magento_env_path }}/{{ environment_name }}/current/var/log/magento.cron.log"
+
+
+- name: "Install old release cleanup cron"
+  cron:
+    name: "remove old release from {{ environment_name }}"
+    hour: '1'
+    minute: '0'
+    weekday: '0'
+    job: "{{ data_volume_path }}/scripts/cleanup_old_release.sh {{ magento_env_path }}/{{ environment_name }}"

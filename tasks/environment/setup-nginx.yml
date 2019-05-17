@@ -1,0 +1,24 @@
+---
+- name: Generate nginx configuration
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    backup: yes
+  with_items:
+    - { src: files/nginx/vhost.conf.j2, dest: "/etc/nginx/conf.d/{{ environment_name }}.conf" }
+    - { src: files/nginx/magento.conf.j2, dest: "/etc/nginx/magento.d/{{ environment_name }}.conf" }
+
+- htpasswd:
+    path: "/etc/nginx/secure.d/.htpasswd_{{ environment_name }}"
+    name: "{{ htauth_username }}"
+    password: "{{ htauth_password }}"
+    owner: root
+    group: root
+    mode: 0664
+  when: enable_htauth == 1
+
+- name: Start and enable nginx
+  systemd:
+    name: nginx
+    state: reloaded
+    enabled: yes

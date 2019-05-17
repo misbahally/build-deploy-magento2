@@ -1,0 +1,24 @@
+---
+- name: Install postfix
+  yum:
+    name: postfix
+    state: installed
+
+- name: Add postfix.conf
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    backup: yes
+  with_items:
+    - { src: files/postfix/main.cf.j2, dest: /etc/postfix/main.cf }
+    - { src: files/postfix/sasl_passwd.j2, dest: /etc/postfix/sasl_passwd }
+
+- name: Create postfix lookup table
+  command: postmap /etc/postfix/sasl_passwd
+
+- name: Start and enable postfix
+  systemd:
+    name: postfix
+    state: restarted
+    enabled: yes
+

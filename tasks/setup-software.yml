@@ -1,0 +1,28 @@
+---
+- name: Set system settings
+  include_tasks: tasks/software/set-system-settings.yml
+
+- name: Install Tools
+  include_tasks: tasks/software/install-tools.yml 
+
+- name: Setup Redis
+  include_tasks: tasks/software/setup-redis.yml 
+
+- name: Setup PHP
+  include_tasks: tasks/software/setup-php.yml
+
+- name: Setup Nginx
+  include_tasks: tasks/software/setup-nginx.yml
+
+- name: Setup MySQL Client
+  include_tasks: tasks/software/setup-mysql-client.yml
+
+- name: Setup MySQL Server
+  include_tasks: tasks/software/setup-mysql-server.yml
+  when: no_mysql_server != 1
+
+- name: Setup Varnish
+  include_tasks: tasks/software/setup-varnish.yml
+
+- name: Setup Postfix
+  include_tasks: tasks/software/setup-postfix.yml

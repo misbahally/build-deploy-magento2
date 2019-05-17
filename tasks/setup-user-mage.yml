@@ -1,0 +1,59 @@
+---
+- name: Create mage group
+  group:
+    name: mage
+    gid: 2000
+    state: present
+
+- name: Create mage user
+  user:
+    name: mage
+    uid: 2000
+    shell: /bin/bash
+    group: mage
+
+- name: Add nginx to mage user group
+  user:
+    name: nginx
+    groups: mage
+    append: yes
+
+- name: Add bamboo deploy key to mage
+  authorized_key:
+    key: "{{ lookup('file', 'files/keys/bamboo.pub') }}"
+    user: mage
+    state: present
+
+- name: Create directories
+  file: 
+    path: "{{ item }}"
+    state: directory
+    owner: mage
+    group: mage
+  with_items:
+    - "{{ data_volume_path }}/scripts"
+
+- name: Copy scripts
+  copy:
+    src: "{{ item }}"
+    dest: "{{ data_volume_path }}/scripts/"
+    mode: 0775
+    owner: mage
+    group: mage
+  with_items:
+    - files/scripts/cleanup_old_release.sh
+
+- name: Install n98-magerun2
+  get_url:
+    url: https://files.magerun.net/n98-magerun2.phar
+    dest: /usr/bin/n98-magerun2
+
+- name: Setup cron for n98-magerun2 upgrades
+  cron:
+    name: Update n98-magerun2 weekly
+    job: /usr/bin/n98-magerun2 self-update
+    state: present
+    day: 1
+    hour: 0
+    minute: 0   
+  

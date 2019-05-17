@@ -1,0 +1,11 @@
+- name: Create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0775
+    owner: mage
+    group: mage
+  with_items:
+    - "{{ magento_env_path }}/{{ environment_name }}"
+    - "{{ data_volume_path }}/{{ environment_name }}"
+    

@@ -1,0 +1,11 @@
+---
+- name: Add php fpm pool
+  template:
+    src: files/php/pool.conf.j2
+    dest: "/etc/php-fpm.d/{{ environment_name }}.conf"
+
+- name: Start and enable php-fpm
+  systemd:
+    name: php-fpm
+    state: restarted
+    enabled: yes

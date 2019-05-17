@@ -1,0 +1,51 @@
+all:
+  children:
+    nonproduction:
+      children:
+        dev:
+          hosts:
+            
+          vars:
+            hostname: 
+            ssh_user: ec2-user
+            system_timezone: 
+            no_mysql_server: 1
+            mail_server_host: email-smtp.us-east-1.amazonaws.com 
+            mail_server_port: 587
+            mail_server_username: 
+            mail_server_password: ''
+            mysql_db_host: 
+            mysql_db_username: root
+            mysql_db_password: 
+            mysql_db_access_host: '%'
+            php_version: 72
+            php_max_execution_time: 300
+            php_max_input_time: 180
+            php_memory_limit: 1G
+            php_expose_php: Off
+            php_display_errors: Off
+            php_display_startup_errors: Off
+            php_log_errors: On
+            php_timezone: "{{ system_timezone }}"
+            data_volume_path: /mnt/data
+            magento_package_name: Magento-CE-2.3.1-2019-03-18-06-36-39.tar.bz2
+            magento_repo_username: 
+            magento_repo_password: 
+            magento_env_path: /var/www/magento
+            magento_version: 2.3.1
+            magento_backend_frontname: 
+            magento_db_host: 
+            magento_varnish_host: localhost
+            magento_varnish_port: 6081
+            magento_session_save_host: localhost
+            magento_session_save_port: 6379
+            magento_cache_backend_host: localhost
+            magento_cache_backend_port: 6379
+            magento_page_cache_host: localhost
+            magento_page_cache_port: 6379
+            magento_admin_user: 
+            magento_admin_password: 
+            magento_admin_email: 
+            magento_admin_firstname: 
+            magento_admin_lastname: 
+            

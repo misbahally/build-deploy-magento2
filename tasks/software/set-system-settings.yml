@@ -1,0 +1,15 @@
+---
+- name: Remove /etc/localtime
+  file:
+    path: /etc/localtime
+    state: absent
+
+- name: "Set timezone to {{ system_timezone }}"
+  file:
+    src: "/usr/share/zoneinfo/{{ system_timezone }}"
+    dest: /etc/localtime
+    state: link
+
+- name: "Set hostname to {{ hostname }}"
+  hostname: 
+    name: "{{ hostname }}"

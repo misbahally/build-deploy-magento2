@@ -1,0 +1,30 @@
+---
+- name: Add repository epel
+  shell: amazon-linux-extras install epel -y
+
+- name: Install server tools
+  yum:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - htop
+    - iotop
+    - pv
+    - strace
+    - nethogs
+    - httpd-tools
+    - MySQL-python
+    - certbot
+    - python-passlib
+
+- name: Download composer
+  shell: curl -sS https://getcomposer.org/installer | php
+  args:
+    chdir: /tmp
+
+- name: Copy composer to /usr/bin
+  copy:
+    src: /tmp/composer.phar
+    dest: /usr/bin/composer
+    mode: 0775
+    remote_src: yes

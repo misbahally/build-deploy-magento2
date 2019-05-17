@@ -1,0 +1,38 @@
+---
+- name: Add repository nginx
+  copy: 
+    src: files/nginx/nginx.repo
+    dest: /etc/yum.repos.d/nginx.repo
+
+- name: Install nginx
+  yum:
+    name: nginx
+    state: installed
+
+- name: Create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /etc/nginx/custom.d
+    - /etc/nginx/secure.d
+    - /etc/nginx/magento.d
+
+- name: Generate DH Parameters 
+  command: openssl dhparam -out /etc/ssl/dhparam.pem 2048 creates=/etc/ssl/dhparam.pem
+
+- name: Add configuration
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    backup: yes
+  with_items:
+    - { src: files/nginx/nginx.conf, dest: /etc/nginx/nginx.conf }
+    - { src: files/nginx/letsencrypt.conf, dest: /etc/nginx/custom.d/letsencrypt.conf }
+    - { src: files/nginx/ips_disable_htauth.conf, dest: /etc/nginx/custom.d/ips_disable_htauth.conf }
+
+- name: Start and enable nginx
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes

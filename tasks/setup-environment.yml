@@ -1,0 +1,18 @@
+- name: Create directories
+  include_tasks: tasks/environment/create-directories.yml
+
+- name: Create MySQL db
+  include_tasks: tasks/environment/create-mysqldb.yml
+
+- block:
+  - name: Install magento
+    include_tasks: tasks/environment/install-magento.yml
+  become: yes
+  become_user: mage
+  become_method: sudo
+
+- name: Setup FPM pool
+  include_tasks: tasks/environment/setup-fpm-pool.yml
+
+- name: Setup nginx
+  include_tasks: tasks/environment/setup-nginx.yml

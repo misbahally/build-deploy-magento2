@@ -1,0 +1,9 @@
+---
+- name: Install redis
+  command: amazon-linux-extras install redis4.0=latest -y
+
+- name: Start and enable redis
+  systemd:
+    name: redis
+    state: started
+    enabled: yes

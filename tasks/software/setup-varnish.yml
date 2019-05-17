@@ -1,0 +1,21 @@
+---
+- name: Add repository varnish
+  copy: 
+    src: files/varnish/varnishcache_varnish5.repo
+    dest: /etc/yum.repos.d/varnishcache_varnish5.repo
+
+- name: Install varnish
+  yum:
+    name: varnish
+    state: installed
+
+- name: Add varnish vcl
+  copy: 
+    src: files/varnish/default.vcl
+    dest: /etc/varnish/default.vcl
+
+- name: Start and enable varnish
+  systemd:
+    name: varnish
+    state: started
+    enabled: yes

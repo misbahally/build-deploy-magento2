@@ -1,0 +1,58 @@
+upstream php-fpm-{{ environment_name }} {
+   server   unix:/var/run/php-fpm-{{ environment_name }}.sock;
+}
+
+server {
+    listen 80;
+    server_name {{ environment_domain }};
+    include custom.d/letsencrypt.conf;
+
+	location / {
+	        return 301 https://$host$request_uri;
+	}
+}
+
+{% if magento_varnish == 1 %}
+server { 
+   listen 8080;
+   server_name  {{ environment_domain }};
+   set $MAGE_ROOT /var/www/magento/{{ environment_name }}/current;
+   include magento.d/{{ environment_name }}.conf;
+   
+   access_log /var/log/nginx/{{ environment_domain }}.varnish_backend.access.log;
+   error_log /var/log/nginx/{{ environment_domain }}.varnish_backend.error.log;
+}
+{% endif %}
+
+server {
+   listen 443 ssl http2;
+   server_name {{ environment_domain }};
+   client_max_body_size 8m;
+   ssl_certificate /etc/letsencrypt/live/{{ environment_domain }}/fullchain.pem;
+   ssl_certificate_key /etc/letsencrypt/live/{{ environment_domain }}/privkey.pem;
+   
+   access_log /var/log/nginx/{{ environment_domain }}.access.log;
+   error_log /var/log/nginx/{{ environment_domain }}.error.log;
+   
+   include custom.d/letsencrypt.conf;
+{% if enable_htauth == 1 %}
+   auth_basic "Restricted";
+   auth_basic_user_file secure.d/.htpasswd_{{ environment_name }};
+   include custom.d/ips_disable_htauth.conf;
+{% endif %}
+
+{% if magento_varnish == 1 %}
+   location / {
+       proxy_pass http://{{ magento_varnish_host }}:{{ magento_varnish_port }};
+       proxy_set_header Host $http_host;
+       proxy_set_header X-Forwarded-Host $http_host;
+       proxy_set_header X-Real-IP $remote_addr;
+       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header X-Forwarded-Proto https;
+       proxy_set_header X-Forwarded-Port 443;
+   }
+{% else %}
+   set $MAGE_ROOT /var/www/magento/{{ environment_name }}/current;
+   include magento.d/{{ environment_name }}.conf;
+{% endif %}
+}

@@ -1,0 +1,80 @@
+---
+- hosts: all
+  remote_user: "{{ ssh_user }}"
+  any_errors_fatal: true
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  tasks:
+    - name: Install and setup software
+      include_tasks: tasks/setup-software.yml
+
+    - name: Setup mage user
+      include_tasks: tasks/setup-user-mage.yml
+
+    - name: Setup dev environment 
+      include_tasks: tasks/setup-environment.yml
+      vars:
+        - environment_name: dev
+        - environment_domain: 
+        - enable_htauth: 1
+        - htauth_username: 
+        - htauth_password: 
+        - magento_db_name: 
+        - magento_db_user: 
+        - magento_db_password: 
+        - magento_varnish: 0
+        - magento_session_save_db: 0
+        - magento_cache_backend_db: 1
+        - magento_page_cache_db: 2
+        - php_fpm_expose_php: "On"
+        - php_fpm_max_execution_time: 180
+        - php_fpm_max_input_time: 90
+        - php_fpm_max_memory_limit: 768M
+        - php_fpm_display_errors: "On"
+        - php_fpm_display_startup_errors: "On"
+        - php_fpm_log_errors: "On"
+        - php_fpm_max_children: 3
+        - php_fpm_start_server: 1
+        - php_fpm_min_spare_servers: 1
+        - php_fpm_max_spare_servers: 2
+        - php_fpm_max_requests: 500
+        - php_fpm_process_idle_timeout: 180s
+
+    - name: Setup stag environment 
+      include_tasks: tasks/setup-environment.yml
+      vars:
+        - environment_name: 
+        - environment_domain: 
+        - enable_htauth: 1
+        - htauth_username: 
+        - htauth_password: 
+        - magento_db_name: 
+        - magento_db_user: 
+        - magento_db_password: 
+        - magento_varnish: 1
+        - magento_session_save_db: 3
+        - magento_cache_backend_db: 4
+        - magento_page_cache_db: 5
+        - php_fpm_expose_php: "Off"
+        - php_fpm_max_execution_time: 180
+        - php_fpm_max_input_time: 90
+        - php_fpm_max_memory_limit: 768M
+        - php_fpm_display_errors: "Off"
+        - php_fpm_display_startup_errors: "Off"
+        - php_fpm_log_errors: "On"
+        - php_fpm_max_children: 3
+        - php_fpm_start_server: 1
+        - php_fpm_min_spare_servers: 1
+        - php_fpm_max_spare_servers: 2
+        - php_fpm_max_requests: 500
+        - php_fpm_process_idle_timeout: 180s
+
+    #     - Setup directory (media, var, basepath, rotate scripts , backup script)
+    #     - Setup PHP, virtualhost, SSL
+    #     - Install magento (link current, cron jobs)
+    #  certbot
+
+
+    # - name: Setup staging environment 

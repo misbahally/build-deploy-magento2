@@ -1,0 +1,19 @@
+---
+- name: "Create DB {{ magento_db_name }}"
+  mysql_db:
+    name: "{{ magento_db_name }}"
+    state: present
+    login_host: "{{ mysql_db_host }}"
+    login_user: "{{ mysql_db_username }}"
+    login_password: "{{ mysql_db_password }}"
+    
+- name: "Create DB user {{ magento_db_user }}@'{{ mysql_db_access_host }}'"
+  mysql_user:
+    name: "{{ magento_db_user }}"
+    host: "{{ mysql_db_access_host }}"
+    password: "{{ magento_db_password }}"
+    priv: "{{ magento_db_name }}.*:ALL"
+    state: present
+    login_host: "{{ mysql_db_host }}"
+    login_user: "{{ mysql_db_username }}"
+    login_password: "{{ mysql_db_password }}"
